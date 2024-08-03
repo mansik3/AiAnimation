@@ -11,7 +11,7 @@ from tensorflow.keras.layers import Conv3D, MaxPooling3D, Flatten, Dense, Dropou
 video_folder_path = 'videos'
 img_height, img_width = 64, 64
 num_classes = 3 
-max_frames = 100
+max_frames = 200
 
 def load_videos(video_folder_path, max_frames):
     X = []
@@ -105,5 +105,7 @@ visualize_samples(X_train, y_train)
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4), 
               loss='categorical_crossentropy', 
               metrics=['accuracy'])
+
+
 
 
