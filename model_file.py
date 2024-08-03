@@ -5,6 +5,7 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
@@ -63,6 +64,19 @@ model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(num_classes, activation='softmax'))
 
+reduce_lr = ReduceLROnPlateau(
+    monitor='val_loss',    # Metric to be monitored
+    factor=0.2,            # Factor by which the learning rate will be reduced
+    patience=3,            # Number of epochs with no improvement after which learning rate will be reduced
+    min_lr=0.0001          # Lower bound on the learning rate
+)
+
+early_stopping = EarlyStopping(
+    monitor='val_loss',    # Metric to be monitored
+    patience=5,            # Number of epochs with no improvement after which training will be stopped
+    restore_best_weights=True  # Restore model weights from the epoch with the best value of the monitored metric
+)
+
 # Compile the model
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
@@ -70,26 +84,18 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 model.summary()
 
 # Train model 
-# Training parameters
 batch_size = 8
 epochs = 10
 
-history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs, batch_size=batch_size)
+# Train model with callbacks
+history = model.fit(
+    x_train, y_train, 
+    validation_data=(x_test, y_test), 
+    epochs=epochs, 
+    batch_size=batch_size,
+    callbacks=[reduce_lr, early_stopping]  # Add the callbacks here
+)
 
 # Evaluate the model
 test_loss, test_acc = model.evaluate(x_test, y_test)
 print(f'Test accuracy: {test_acc}')
-
-# Visualize some sample frames
-def visualize_samples(X, y, num_samples=5):
-    for i in range(num_samples):
-        plt.figure(figsize=(10, 2))
-        for j in range(10):  # show first 10 frames
-            plt.subplot(1, 10, j+1)
-            plt.imshow(X[i][j])
-            plt.axis('off')
-        plt.title(f'Class: {np.argmax(y[i])}')
-        plt.show()
-
-print('Visualizing samples')
-visualize_samples(x_train, y_train)
